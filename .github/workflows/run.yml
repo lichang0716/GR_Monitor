@@ -1,0 +1,21 @@
+name: Ricoh_Nonstop_Monitor
+on:
+  schedule:
+    - cron: '0 2 * * *' # 北京时间 10:00 启动
+    - cron: '0 6 * * *' # 北京时间 14:00 启动
+  workflow_dispatch: 
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ricoh-monitor
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Run
+        env:
+          BARK_TOKEN: ${{ secrets.BARK_TOKEN }}
+        run: pip install requests && python ricoh_monitor.py
