@@ -77,7 +77,7 @@ def check(is_first_run=False):
         
         if is_first_run:
             print(f"[{get_now()}] 成功初始化缓存池。当前在商城第 1 页抓到符合 GR 关键词的商品共 {len(current_items)} 个。")
-            notify("📸 理光监控已成功对接", f"字段修正完毕！当前正以 {LOOP_INTERVAL}s 频率为您蹲守 GR IIIx / GR IV。")
+            notify("📸 理光监控已成功对接", f"当前正以 {LOOP_INTERVAL}s 频率为您蹲守 GR IIIx / GR IV。")
             
         last_state = current_items
         print(f"[{get_now()}] 轮询正常，当前监控的目标商品数: {len(current_items)}")
