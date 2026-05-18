@@ -11,8 +11,8 @@ TARGET_KEYWORDS = ["gr iii x", "gr iiix", "gr3x", "gr iv", "gr4", "官翻"]
 
 # 30 秒探测一次
 LOOP_INTERVAL = 30  
-# 单次任务持续 4 小时 (245分钟)
-RUN_DURATION = 245 
+# 单次任务持续分钟
+RUN_DURATION = 125
 
 BARK_TOKEN = os.environ.get("BARK_TOKEN")
 # ================================================
