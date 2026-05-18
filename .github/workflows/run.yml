@@ -1,15 +1,23 @@
-name: Ricoh_Nonstop_Monitor
+name: Ricoh_Nonstop_Monitor_V2
 on:
   schedule:
-    - cron: '0 2 * * *' # 北京时间 10:00 启动
-    - cron: '0 6 * * *' # 北京时间 14:00 启动
+    # 错开整点排队，使用冷门的 '13分' 和 '43分' 触发
+    # 1. 北京时间 09:43 启动 (UTC 01:43) -> 负责 09:43 - 11:48
+    - cron: '43 1 * * *'
+    # 2. 北京时间 11:43 启动 (UTC 03:43) -> 负责 11:43 - 13:48
+    - cron: '43 3 * * *'
+    # 3. 北京时间 13:43 启动 (UTC 05:43) -> 负责 13:43 - 15:48
+    - cron: '43 5 * * *'
+    # 4. 北京时间 15:43 启动 (UTC 07:43) -> 负责 15:43 - 17:48
+    - cron: '43 7 * * *'
   workflow_dispatch: 
+
 jobs:
   monitor:
     runs-on: ubuntu-latest
     concurrency:
       group: ricoh-monitor
-      cancel-in-progress: true
+      cancel-in-progress: true # 如果前一班车因为延迟还没结束，新车直接把旧车顶替掉，无缝衔接
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
