@@ -102,54 +102,63 @@ def check_apple_store_pickup():
       result = response.json()
     except Exception as json_err:
       print(f"JSON 解析失败: {json_err}")
-      print(f"服务器返回的原始内容（前 1000 字符）:\n{response.text[:1000]}")
       return
 
-    # 使用递归函数智能查找所有门店信息
     stores = find_key_recursive(result, "retailStores")
 
     if not stores or not isinstance(stores, list):
-      print("⚠️ 仍然未找到 retailStores，完整响应内容如下：")
-      print(json.dumps(result, ensure_ascii=False))
+      print("⚠️ 未能获取到门店列表数据。")
       return
 
-    print(f"\n--- 查询结果 (共找到 {len(stores)} 家门店) ---")
-    in_stock_found = False
-    stock_summary = []
-
+    # 锁定目标：Apple 苏州
+    target_store = None
     for store in stores:
-      store_name = store.get("storeName", "未知门店")
-      distance = store.get("distance", "未知距离")
-      availability = store.get("availability", {})
-      store_status = availability.get("storeAvailability", "未知状态")
+      if store.get("storeName") == "Apple 苏州":
+        target_store = store
+        break
 
-      print(f"门店: {store_name} | 距离: {distance} | 状态: {store_status}")
+    if not target_store:
+      print("⚠️ 未在返回结果中找到 [Apple 苏州] 门店。")
+      return
 
-      line_items = availability.get("lineItemAvailability", [])
-      for item in line_items:
-        part_name = item.get("partName", "iPhone Duo")
-        quote = item.get("availabilityQuote", "未知")
-        is_available = item.get("availableNowForLine", False)
-        print(f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})")
+    store_name = target_store.get("storeName")
+    distance = target_store.get("distance", "未知")
+    availability = target_store.get("availability", {})
+    store_status = availability.get("storeAvailability", "未知状态")
 
-        if is_available or (
-            quote and "不可取货" not in quote and "目前不可取货" not in quote
-        ):
-          in_stock_found = True
-          stock_summary.append(f"门店: {store_name}\n商品: {part_name}\n状态: {quote}")
+    print(f"\n--- 🎯 目标门店锁定 ---")
+    print(f"门店: {store_name} | 距离: {distance} | 状态: {store_status}")
 
+    in_stock_found = False
+    stock_details = []
+
+    line_items = availability.get("lineItemAvailability", [])
+    for item in line_items:
+      part_name = item.get("partName", "iPhone Duo")
+      quote = item.get("availabilityQuote", "未知")
+      is_available = item.get("availableNowForLine", False)
+      print(f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})")
+
+      # 判断是否有货
+      if is_available or (
+          quote and "不可取货" not in quote and "目前不可取货" not in quote
+      ):
+        in_stock_found = True
+        stock_details.append(f"商品: {part_name}\n状态: {quote}")
+
+    # 仅针对 Apple 苏州有货时推送
     if in_stock_found:
-      content_str = "\n\n".join(stock_summary)
-      notify("🚨 Apple Store 发现可取货！", content_str)
+      content_str = "\n".join(stock_details)
+      notify("🚨 Apple 苏州 发现可取货！", content_str)
     else:
-      print("当前周边门店均无货。")
+      print("🌱 Apple 苏州当前暂无货可取。")
 
   except Exception as e:
     print(f"请求发生异常: {e}")
 
 
 if __name__ == "__main__":
-  print("🚀 Apple Store 监控调试脚本启动...")
+  print("🚀 Apple 苏州监控脚本启动...")
   sys.stdout.flush()
   check_apple_store_pickup()
   sys.stdout.flush()
