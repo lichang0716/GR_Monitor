@@ -138,4 +138,21 @@ def check_apple_store_pickup():
             content_str = "\n".join(stock_details)
             notify("🚨 Apple 苏州 发现可取货！", content_str)
         else:
-            print("🌱 Apple 苏州当前
+            print("🌱 Apple 苏州当前暂无货可取。")
+            # 如果是整点 (0分) 或半点 (30分)，则发送无货状态报平安推送
+            current_minute = datetime.now().minute
+            if current_minute in (0, 30):
+                current_time_str = datetime.now().strftime("%H:%M")
+                notify(f"⏳ Apple 苏州巡检报平安 ({current_time_str})", "当前暂无货可取，脚本正在持续为您蹲守中...")
+
+    except Exception as e:
+        error_msg = f"运行捕获异常: {e}"
+        print(error_msg)
+        notify("❌ Apple 监控脚本崩溃", error_msg)
+
+
+if __name__ == "__main__":
+    print("🚀 Apple 苏州监控脚本启动...")
+    sys.stdout.flush()
+    check_apple_store_pickup()
+    sys.stdout.flush()
