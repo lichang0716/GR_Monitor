@@ -138,4 +138,4 @@ def check_apple_store_pickup():
             content_str = "\n".join(stock_details)
             notify("🚨 Apple 苏州 发现可取货！", content_str)
         else:
-            print("🌱 Apple 苏州当前暂
+            print("🌱 Apple 苏州当前
