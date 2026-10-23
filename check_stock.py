@@ -57,7 +57,8 @@ def check_apple_store_pickup():
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Requested-With": "Fetch",
       "x-aos-model-page": "checkoutPage",
-      "x-aos-stk": "KTVu9cALz4gEm8GiScQzqfacUaI",
+      # 使用你刚重新抓取的最新 stk
+      "x-aos-stk": "VVTUPxBBUhrEKoTyJj29bQmlHKA",
       "syntax": "graviton",
       "modelVersion": "v2",
       "Cookie": cookie_str,
@@ -110,7 +111,7 @@ def check_apple_store_pickup():
       print("⚠️ 未能获取到门店列表数据。")
       return
 
-    # 锁定目标：Apple 苏州
+    # 精准锁定：Apple 苏州
     target_store = None
     for store in stores:
       if store.get("storeName") == "Apple 苏州":
@@ -139,14 +140,12 @@ def check_apple_store_pickup():
       is_available = item.get("availableNowForLine", False)
       print(f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})")
 
-      # 判断是否有货
       if is_available or (
           quote and "不可取货" not in quote and "目前不可取货" not in quote
       ):
         in_stock_found = True
         stock_details.append(f"商品: {part_name}\n状态: {quote}")
 
-    # 仅针对 Apple 苏州有货时推送
     if in_stock_found:
       content_str = "\n".join(stock_details)
       notify("🚨 Apple 苏州 发现可取货！", content_str)
