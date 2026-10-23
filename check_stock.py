@@ -2,15 +2,13 @@ from datetime import datetime
 import json
 import os
 import sys
-import pytz
+from zoneinfo import ZoneInfo
 import requests
 
 
 def get_shanghai_time():
-    """获取当前上海时区的时间对象和格式化字符串"""
-    shanghai_tz = pytz.timezone("Asia/Shanghai")
-    now_shanghai = datetime.now(shanghai_tz)
-    return now_shanghai
+    """使用 Python 自带库获取当前上海时区的时间对象"""
+    return datetime.now(ZoneInfo("Asia/Shanghai"))
 
 
 def notify(title, content):
@@ -200,7 +198,7 @@ def check_apple_store_pickup():
             print("🌱 Apple 苏州当前暂无货可取。")
             sys.stdout.flush()
 
-            # 使用上海时区获取当前分钟
+            # 使用自带的 zoneinfo 获取上海时区时间
             now_shanghai = get_shanghai_time()
             current_minute = now_shanghai.minute
             current_time_str = now_shanghai.strftime("%H:%M")
