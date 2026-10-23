@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import requests
@@ -100,10 +101,8 @@ def check_apple_store_pickup():
     )
 
     if not stores:
-      print(
-          "⚠️ 未在标准路径解析到门店信息。打印部分响应结构以供排查："
-      )
-      print(json.dumps(result, ensure_ascii=False)[:1000])
+      print("⚠️ 未在标准路径解析到门店信息。打印部分响应结构以供排查：")
+      print(json.dumps(result, ensure_ascii=False)[:1500])
       return
 
     print(f"\n--- 查询结果 (共找到 {len(stores)} 家门店) ---")
