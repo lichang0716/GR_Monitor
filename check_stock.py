@@ -2,7 +2,15 @@ from datetime import datetime
 import json
 import os
 import sys
+import pytz
 import requests
+
+
+def get_shanghai_time():
+    """获取当前上海时区的时间对象和格式化字符串"""
+    shanghai_tz = pytz.timezone("Asia/Shanghai")
+    now_shanghai = datetime.now(shanghai_tz)
+    return now_shanghai
 
 
 def notify(title, content):
@@ -17,7 +25,7 @@ def notify(title, content):
             "body": content,
             "group": "AppleStore",
             "level": "active",
-            "sound": "minuet"
+            "sound": "minuet",
         }
         try:
             r = requests.post(url, json=payload, timeout=5)
@@ -52,7 +60,7 @@ def find_key_recursive(data, target_key):
 def check_apple_store_pickup():
     print("1. 准备构建请求参数...")
     sys.stdout.flush()
-    
+
     url = "https://secure8.www.apple.com.cn/shop/checkoutx/fulfillment?_a=search&_m=checkout.fulfillment.pickupTab.pickup.storeLocator"
 
     cookie_str = os.environ.get("APPLE_COOKIE", "")
@@ -64,8 +72,14 @@ def check_apple_store_pickup():
         return
 
     headers = {
-        "Referer": "https://secure8.www.apple.com.cn/shop/checkout?_s=Fulfillment-init",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Safari/605.1.15",
+        "Referer": (
+            "https://secure8.www.apple.com.cn/shop/checkout?_s=Fulfillment-init"
+        ),
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+            " AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1"
+            " Safari/605.1.15"
+        ),
         "Origin": "https://secure8.www.apple.com.cn",
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Requested-With": "Fetch",
@@ -77,21 +91,34 @@ def check_apple_store_pickup():
     }
 
     data = {
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.showAllStores": "false",
+        "checkout.fulfillment.pickupTab.pickup.storeLocator.showAllStores": (
+            "false"
+        ),
         "checkout.fulfillment.pickupTab.pickup.storeLocator.selectStore": "",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.searchInput": "江苏 苏州 姑苏区",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.city": "苏州",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.state": "江苏",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.provinceCityDistrict": "江苏 苏州 姑苏区",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.countryCode": "CN",
-        "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.district": "姑苏区"
+        "checkout.fulfillment.pickupTab.pickup.storeLocator.searchInput": (
+            "江苏 苏州 姑苏区"
+        ),
+        (
+            "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.city"
+        ): "苏州",
+        (
+            "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.state"
+        ): "江苏",
+        (
+            "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.provinceCityDistrict"
+        ): "江苏 苏州 姑苏区",
+        (
+            "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.countryCode"
+        ): "CN",
+        (
+            "checkout.fulfillment.pickupTab.pickup.storeLocator.address.stateCitySelectorForCheckout.district"
+        ): "姑苏区",
     }
 
     try:
         print("2. 正在向 Apple 发起 HTTP POST 请求...")
         sys.stdout.flush()
-        
-        # 强制加入 10 秒超时，防止网络卡死无响应
+
         response = requests.post(url, headers=headers, data=data, timeout=10)
 
         print(f"3. 请求完成，HTTP 状态码: {response.status_code}")
@@ -116,7 +143,10 @@ def check_apple_store_pickup():
         stores = find_key_recursive(result, "retailStores")
 
         if not stores or not isinstance(stores, list):
-            error_msg = "⚠️ 未能获取到门店列表数据，可能 Cookie 已完全失效或风控拦截。"
+            error_msg = (
+                "⚠️ 未能获取到门店列表数据，可能 Cookie"
+                " 已完全失效或风控拦截。"
+            )
             print(error_msg)
             sys.stdout.flush()
             notify("⚠️ Apple 监控异常：数据为空", error_msg)
@@ -151,10 +181,14 @@ def check_apple_store_pickup():
             part_name = item.get("partName", "iPhone Duo")
             quote = item.get("availabilityQuote", "未知")
             is_available = item.get("availableNowForLine", False)
-            print(f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})")
+            print(
+                f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})"
+            )
             sys.stdout.flush()
 
-            if is_available or (quote and "不可取货" not in quote and "目前不可取货" not in quote):
+            if is_available or (
+                quote and "不可取货" not in quote and "目前不可取货" not in quote
+            ):
                 in_stock_found = True
                 stock_details.append(f"商品: {part_name}\n状态: {quote}")
 
@@ -165,11 +199,28 @@ def check_apple_store_pickup():
         else:
             print("🌱 Apple 苏州当前暂无货可取。")
             sys.stdout.flush()
-            current_time_str = datetime.now().strftime("%H:%M")
-            notify(f"⏳ Apple 苏州巡检报平安 ({current_time_str})", "当前暂无货可取，脚本正在持续为您蹲守中...")
+
+            # 使用上海时区获取当前分钟
+            now_shanghai = get_shanghai_time()
+            current_minute = now_shanghai.minute
+            current_time_str = now_shanghai.strftime("%H:%M")
+
+            # 仅在整点 (0分) 或半点 (30分) 时发送无货报平安推送
+            if current_minute in (0, 30):
+                notify(
+                    f"⏳ Apple 苏州巡检报平安 ({current_time_str})",
+                    "当前暂无货可取，脚本正在持续为您蹲守中...",
+                )
+            else:
+                print(
+                    f"当前分钟为 {current_minute}分，非整点/半点，跳过无货推送。"
+                )
+                sys.stdout.flush()
 
     except requests.exceptions.Timeout:
-        error_msg = "❌ 请求 Apple 接口超时（超过 10 秒无响应），可能被苹果防火墙限制。"
+        error_msg = (
+            "❌ 请求 Apple 接口超时（超过 10 秒无响应），可能被苹果防火墙限制。"
+        )
         print(error_msg)
         sys.stdout.flush()
         notify("⚠️ Apple 监控异常：请求超时", error_msg)
