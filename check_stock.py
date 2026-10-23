@@ -9,12 +9,19 @@ def notify(title, content):
     print(f">> 触发通知发送 <<\n标题: {title}\n内容: {content}")
     bark_token = os.environ.get("BARK_TOKEN")
     if bark_token:
-        clean_title = requests.utils.quote(title)
-        clean_content = requests.utils.quote(content)
-        url = f"https://api.day.app/{bark_token}/{clean_title}/{clean_content}?group=AppleStore&level=active&sound=minuet"
+        url = "https://api.day.app/push"
+        payload = {
+            "device_key": bark_token,
+            "title": title,
+            "body": content,
+            "group": "AppleStore",
+            "level": "active",
+            "sound": "minuet"
+        }
         try:
-            r = requests.get(url, timeout=5)
+            r = requests.post(url, json=payload, timeout=5)
             print(f"Bark 返回状态: {r.status_code}")
+            print(f"Bark 响应内容: {r.text}")
         except Exception as e:
             print(f"Bark 推送失败: {e}")
     else:
@@ -93,64 +100,3 @@ def check_apple_store_pickup():
             return
 
         stores = find_key_recursive(result, "retailStores")
-
-        if not stores or not isinstance(stores, list):
-            error_msg = "⚠️ 未能获取到门店列表数据，可能 Cookie 已完全失效或风控拦截。"
-            print(error_msg)
-            notify("⚠️ Apple 监控异常：数据为空", error_msg)
-            return
-
-        # 精准锁定：Apple 苏州
-        target_store = None
-        for store in stores:
-            if store.get("storeName") == "Apple 苏州":
-                target_store = store
-                break
-
-        if not target_store:
-            print("⚠️ 未在返回结果中找到 [Apple 苏州] 门店。")
-            return
-
-        store_name = target_store.get("storeName")
-        distance = target_store.get("distance", "未知")
-        availability = target_store.get("availability", {})
-        store_status = availability.get("storeAvailability", "未知状态")
-
-        print(f"\n--- 🎯 目标门店锁定 ---")
-        print(f"门店: {store_name} | 距离: {distance} | 状态: {store_status}")
-
-        in_stock_found = False
-        stock_details = []
-
-        line_items = availability.get("lineItemAvailability", [])
-        for item in line_items:
-            part_name = item.get("partName", "iPhone Duo")
-            quote = item.get("availabilityQuote", "未知")
-            is_available = item.get("availableNowForLine", False)
-            print(f"  -> 商品: {part_name} | 状态: {quote} (可买: {is_available})")
-
-            if is_available or (quote and "不可取货" not in quote and "目前不可取货" not in quote):
-                in_stock_found = True
-                stock_details.append(f"商品: {part_name}\n状态: {quote}")
-
-        # 判定通知逻辑
-        if in_stock_found:
-            content_str = "\n".join(stock_details)
-            notify("🚨 Apple 苏州 发现可取货！", content_str)
-        else:
-            print("🌱 Apple 苏州当前暂无货可取。")
-            # 如果是整点 (0分) 或半点 (30分)，则发送无货状态报平安推送
-                current_time_str = datetime.now().strftime("%H:%M")
-                notify(f"⏳ Apple 苏州巡检报平安 ({current_time_str})", "当前暂无货可取，脚本正在持续为您蹲守中...")
-
-    except Exception as e:
-        error_msg = f"运行捕获异常: {e}"
-        print(error_msg)
-        notify("❌ Apple 监控脚本崩溃", error_msg)
-
-
-if __name__ == "__main__":
-    print("🚀 Apple 苏州监控脚本启动...")
-    sys.stdout.flush()
-    check_apple_store_pickup()
-    sys.stdout.flush()
