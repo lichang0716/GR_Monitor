@@ -82,12 +82,14 @@ def check_apple_store_pickup():
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Requested-With": "Fetch",
         "x-aos-model-page": "checkoutPage",
-        "x-aos-stk": "VVTUPxBBUhrEKoTyJj29bQmlHKA",
+        # 更新为最新抓取到的 stk
+        "x-aos-stk": "YsM5Tgl2RTEoZK6qYqCRox03Uhs",
         "syntax": "graviton",
         "modelVersion": "v2",
         "Cookie": cookie_str,
     }
 
+    # 锁定 Apple 苏州（姑苏区）
     data = {
         "checkout.fulfillment.pickupTab.pickup.storeLocator.showAllStores": (
             "false"
