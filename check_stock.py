@@ -140,8 +140,6 @@ def check_apple_store_pickup():
         else:
             print("🌱 Apple 苏州当前暂无货可取。")
             # 如果是整点 (0分) 或半点 (30分)，则发送无货状态报平安推送
-            current_minute = datetime.now().minute
-            if current_minute in (0, 30):
                 current_time_str = datetime.now().strftime("%H:%M")
                 notify(f"⏳ Apple 苏州巡检报平安 ({current_time_str})", "当前暂无货可取，脚本正在持续为您蹲守中...")
 
